@@ -170,7 +170,7 @@ export default function LoginPage() {
             lineHeight: "1.5",
           }}
         >
-          Sign in to access your MongoDB-synchronized task repository.
+          Sign in to access your personal task repository.
         </p>
       </div>
 
@@ -188,17 +188,6 @@ export default function LoginPage() {
           overflow: "hidden",
         }}
       >
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            height: "3px",
-            background: "linear-gradient(90deg, #cc785c 0%, #dd8a6f 100%)",
-          }}
-        />
-
         {error && (
           <div
             style={{
@@ -363,7 +352,7 @@ export default function LoginPage() {
             lineHeight: "1.5",
           }}
         >
-          Secured with NIST-grade salt hashing &amp; MongoDB Atlas persistent database.
+          Secured with cryptographic session protection.
         </div>
       </div>
 

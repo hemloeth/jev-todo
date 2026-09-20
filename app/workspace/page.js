@@ -1020,13 +1020,10 @@ export default function WorkspacePage() {
             {sortingAi ? (
               <>
                 <span className="btn-spinner btn-spinner-coral" style={{ width: "12px", height: "12px" }} />
-                <span>Evaluating notes...</span>
+                <span>Processing notes...</span>
               </>
             ) : (
-              <>
-                <span style={{ color: "var(--color-primary)" }}>✦</span>
-                <span>{showAiDrawer ? "Hide AI Parser" : "Paste Messy Notes..."}</span>
-              </>
+              <span>{showAiDrawer ? "Close Notes Drawer" : "Paste Notes..."}</span>
             )}
           </button>
         </div>
@@ -1304,18 +1301,15 @@ export default function WorkspacePage() {
               disabled={sortingAi}
               className={`btn-secondary ${sortingAi ? "btn-evaluating" : ""}`}
               style={{ height: "32px", fontSize: "11.5px", padding: "0 10px", gap: "5px", display: "inline-flex", alignItems: "center" }}
-              title="Open AI Note Parser"
+              title="Open Note Ingest"
             >
               {sortingAi ? (
                 <>
                   <span className="btn-spinner btn-spinner-coral" style={{ width: "11px", height: "11px" }} />
-                  <span>Evaluating...</span>
+                  <span>Processing...</span>
                 </>
               ) : (
-                <>
-                  <span style={{ color: "var(--color-primary)" }}>✦</span>
-                  <span>{showAiDrawer ? "Hide" : "Ingest"}</span>
-                </>
+                <span>{showAiDrawer ? "Hide" : "Ingest"}</span>
               )}
             </button>
           </div>
@@ -1474,10 +1468,10 @@ export default function WorkspacePage() {
                       margin: 0,
                     }}
                   >
-                    TypeSafe Jev Note Parser
+                    Note Ingest &amp; Organizer
                   </h3>
                   <p style={{ fontSize: "13px", color: "var(--color-muted)", margin: "3px 0 0 0" }}>
-                    Paste bullets or raw thoughts. Jev extracts tasks, urgency scores, and deadlines directly into MongoDB.
+                    Paste bullets or raw thoughts. Automatically extracts tasks, urgency scores, and deadlines.
                   </p>
                 </div>
 
@@ -1494,7 +1488,7 @@ export default function WorkspacePage() {
                     gap: "6px",
                     cursor: "pointer",
                   }}
-                  title="Generate fresh, randomized human-style scratchpad notes"
+                  title="Generate fresh, randomized scratchpad notes"
                 >
                   <span
                     className={isRollingDice ? "dice-roll" : ""}
@@ -1542,7 +1536,7 @@ export default function WorkspacePage() {
                   {sortingAi ? (
                     <>
                       <span className="btn-spinner" />
-                      <span>Evaluating with Jev</span>
+                      <span>Processing Notes</span>
                       <span className="eval-dots"><span>.</span><span>.</span><span>.</span></span>
                     </>
                   ) : (
@@ -2240,7 +2234,7 @@ export default function WorkspacePage() {
                   </p>
                   <div style={{ fontSize: "12.5px", color: "var(--color-muted)", backgroundColor: "var(--color-canvas)", padding: "14px 16px", borderRadius: "var(--radius-md)", border: "1px solid var(--color-hairline-soft)", marginTop: "auto", lineHeight: 1.5, minHeight: "92px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
                     <div>
-                      <strong>Personal Flow:</strong> Third-party blockers and waiting bottlenecks are eliminated. All actions save directly to your live MongoDB Atlas cloud database.
+                      <strong>Personal Flow:</strong> Third-party blockers and waiting bottlenecks are eliminated. All actions save directly to your workspace.
                     </div>
                   </div>
                 </div>
@@ -2266,7 +2260,7 @@ export default function WorkspacePage() {
 
 IS_TASK_MIN = 0.50              # Below 0.50 -> Routed to 'Ideas & Facts'
 DEADLINE_CONFIDENCE_MIN = 0.70  # Below 0.70 -> Left blank to prevent false dates
-MODE = "solo_personal"          # Direct execution synchronized with MongoDB Atlas`}
+MODE = "solo_personal"          # Direct execution synchronized with your workspace`}
                 </pre>
               </div>
 
@@ -2359,17 +2353,6 @@ MODE = "solo_personal"          # Direct execution synchronized with MongoDB Atl
           }}
         >
           <div className="claude-modal-box" style={{ maxWidth: "430px" }}>
-            <div
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                height: "3px",
-                backgroundColor: "#c44d3c",
-              }}
-            />
-
             <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", marginBottom: "14px" }}>
               <div
                 style={{
@@ -2401,7 +2384,7 @@ MODE = "solo_personal"          # Direct execution synchronized with MongoDB Atl
                   Delete Task?
                 </h3>
                 <p style={{ fontSize: "13.5px", color: "var(--color-muted)", margin: 0, lineHeight: 1.4 }}>
-                  Are you sure you want to delete this task? This action will remove it from your MongoDB database.
+                  Are you sure you want to delete this task? This action cannot be undone.
                 </p>
               </div>
             </div>
@@ -2492,18 +2475,6 @@ MODE = "solo_personal"          # Direct execution synchronized with MongoDB Atl
           }}
         >
           <div className="claude-modal-box">
-            {/* Top Accent Strip */}
-            <div
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                height: "3px",
-                backgroundColor: inspectingItem.is_task !== false ? "#2e7559" : "var(--color-primary)",
-              }}
-            />
-
             {/* Header */}
             <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", marginBottom: "16px" }}>
               <div
@@ -2536,7 +2507,7 @@ MODE = "solo_personal"          # Direct execution synchronized with MongoDB Atl
                   Decision Basis &amp; Score
                 </h3>
                 <p style={{ fontSize: "12.5px", color: "var(--color-muted)", margin: 0 }}>
-                  Mathematical classification generated by TypeSafe Jev model
+                  Classification and priority score breakdown
                 </p>
               </div>
             </div>

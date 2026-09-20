@@ -114,107 +114,49 @@ export default function Home() {
           {/* Left Column: Headline, subtext, actions & metrics */}
           <div className="hero-content-left">
             {/* Minimalist Editorial Eyebrow */}
-            <div style={{ display: "inline-flex", alignItems: "center", gap: "10px", width: "fit-content" }}>
-              <span
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  padding: "4px 12px",
-                  borderRadius: "9999px",
-                  backgroundColor: "var(--color-surface-soft)",
-                  border: "1px solid var(--color-hairline)",
-                  fontSize: "12px",
-                  fontWeight: 500,
-                  color: "var(--color-ink)",
-                  letterSpacing: "0.2px",
-                }}
-              >
-                Personal Workspace
-              </span>
-              <span style={{ fontSize: "12px", color: "var(--color-muted)", fontFamily: "var(--font-sans)" }}>
-                Solo Focus &amp; Flow
-              </span>
+            <div className="hero-eyebrow-container">
+              <span className="hero-eyebrow-pulse" />
+              <span className="hero-eyebrow-text">Personal Workspace</span>
+              <span className="hero-eyebrow-divider">•</span>
+              <span className="hero-eyebrow-sub">Solo Focus &amp; Flow</span>
             </div>
 
-            <h1
-              className="display-headline"
-              style={{ fontSize: "clamp(34px, 4.5vw, 50px)", lineHeight: 1.12 }}
-            >
-              Meet your thinking partner for{" "}
-              <span
-                style={{
-                  fontFamily: "var(--font-serif)",
-                  fontStyle: "italic",
-                  fontWeight: 400,
-                  color: "var(--color-primary)",
-                }}
-              >
-                daily action.
-              </span>
+            <h1 className="hero-display-headline">
+              Meet your thinking partner for <em>daily action.</em>
             </h1>
 
-            <p className="sub-headline">
-              Paste messy scratchpads, quick thoughts, or half-formed notes. TypeSafe Jev evaluates urgency, deadlines, and task viability with calibrated probabilities — stored securely in your MongoDB cloud database.
+            <p className="hero-subheadline">
+              Paste scratchpads, quick thoughts, or half-formed notes. Cadence organizes tasks, deadlines, and priorities with calm clarity.
             </p>
 
-            {/* CLICKABLE CTA BUTTONS */}
-            <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap", paddingTop: "6px" }}>
-              <Link
-                href="/workspace"
-                className="btn-primary"
-                style={{
-                  height: "46px",
-                  padding: "0 26px",
-                  fontSize: "15px",
-                  textDecoration: "none",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  borderRadius: "var(--radius-md)",
-                  fontWeight: 500,
-                  boxShadow: "0 4px 14px rgba(204, 120, 92, 0.28)",
-                }}
-              >
+            {/* RESPONSIVE CTA BUTTONS (Full-width on mobile, side-by-side on desktop) */}
+            <div className="hero-cta-group">
+              <Link href="/workspace" className="hero-btn-primary">
                 <span>Open Workspace</span>
                 <span style={{ fontSize: "17px" }}>→</span>
               </Link>
 
-              <Link
-                href="/workspace?demo=true"
-                className="btn-secondary"
-                style={{
-                  height: "46px",
-                  padding: "0 20px",
-                  fontSize: "14px",
-                  textDecoration: "none",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  borderRadius: "var(--radius-md)",
-                }}
-              >
-                <span>✦ Paste Messy Notes...</span>
+              <Link href="/workspace?demo=true" className="hero-btn-secondary">
+                <span>Paste Notes...</span>
               </Link>
             </div>
 
             {/* Quick Metrics Strip */}
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", paddingTop: "8px" }}>
-              <div className="metric-pill">
-                <span style={{ color: "var(--color-muted)" }}>Active Tasks:</span>
+            <div className="hero-metrics-strip">
+              <div className="hero-metric-chip">
+                <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "var(--color-primary)" }} />
+                <span>Active Tasks:</span>
                 <strong>{taskMetrics.active}</strong>
               </div>
-              <div className="metric-pill">
-                <span style={{ color: "var(--color-muted)" }}>Completed:</span>
+              <div className="hero-metric-chip">
+                <span style={{ color: "var(--color-success)", fontWeight: "bold" }}>✓</span>
+                <span>Completed:</span>
                 <strong style={{ color: "var(--color-success)" }}>{taskMetrics.completed}</strong>
-              </div>
-              <div className="metric-pill">
-                <span style={{ color: "var(--color-muted)" }}>Storage:</span>
-                <strong style={{ color: "#2e7559" }}>MongoDB Atlas</strong>
               </div>
             </div>
           </div>
 
-          {/* Right Column: Dark Product Chrome Showcase Card */}
+          {/* Right Column: Tangible Product Showcase Card */}
           <div className="hero-card-right">
             {/* Window chrome header */}
             <div
@@ -233,112 +175,146 @@ export default function Home() {
                 <span style={{ width: "9px", height: "9px", borderRadius: "50%", backgroundColor: "#ffbd2e" }} />
                 <span style={{ width: "9px", height: "9px", borderRadius: "50%", backgroundColor: "#27c93f" }} />
                 <span style={{ color: "var(--color-on-dark-soft)", marginLeft: "6px" }}>
-                  pipeline: system_one
+                  cadence.preview
                 </span>
               </div>
-              <span style={{ color: "var(--color-accent-teal)" }}>
-                latency: 60ms
+              <span style={{ color: "var(--color-accent-teal)", display: "flex", alignItems: "center", gap: "5px", fontSize: "11px" }}>
+                <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "var(--color-accent-teal)" }} />
+                active
               </span>
             </div>
 
-            {/* Visual transformation: Raw text -> Calibrated judgment */}
+            {/* Visual transformation: Raw text -> Tangible, Beautiful Action Card */}
             <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "14px" }}>
-              {/* 1. Raw Input snippet */}
+              {/* 1. Raw Scratchpad Thought */}
               <div
                 style={{
                   backgroundColor: "var(--color-surface-dark-soft)",
                   borderRadius: "var(--radius-md)",
-                  padding: "10px 14px",
+                  padding: "12px 14px",
                   border: "1px solid rgba(230, 223, 216, 0.08)",
-                  fontSize: "12px",
-                  fontFamily: "var(--font-mono)",
-                  color: "var(--color-on-dark-soft)",
+                  fontSize: "13px",
+                  color: "var(--color-on-dark)",
                 }}
               >
-                <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "1px", color: "var(--color-muted-soft)", marginBottom: "4px" }}>
-                  Raw Note Input
+                <div style={{ fontSize: "10.5px", textTransform: "uppercase", letterSpacing: "0.8px", color: "var(--color-muted-soft)", marginBottom: "6px", display: "flex", alignItems: "center", gap: "5px" }}>
+                  <span>📝</span>
+                  <span>Unstructured Scratchpad Note</span>
                 </div>
-                <div style={{ color: "var(--color-on-dark)" }}>
-                  &quot;Prepare presentation for quarterly review by Friday&quot;
+                <div style={{ fontStyle: "italic", color: "#e8e5de", lineHeight: 1.45, fontSize: "13.5px" }}>
+                  &ldquo;Prepare presentation deck for quarterly review by Friday&rdquo;
                 </div>
               </div>
 
-              {/* Arrow connector */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", color: "var(--color-primary)", fontSize: "11px", gap: "4px" }}>
-                <span>↓ Jev Calibrated Evaluation</span>
+              {/* Conversion flow separator */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", color: "var(--color-primary)", fontSize: "12px", gap: "6px", padding: "2px 0" }}>
+                <span style={{ fontSize: "14px" }}>↓</span>
+                <span style={{ fontWeight: 500, letterSpacing: "0.2px" }}>Instant Task Transformation</span>
               </div>
 
-              {/* 2. Calibrated Decision items */}
+              {/* 2. Tangible Actionable Task Card */}
               <div
                 style={{
                   backgroundColor: "var(--color-surface-dark-elevated)",
                   borderRadius: "var(--radius-md)",
-                  padding: "12px 14px",
+                  padding: "14px 16px",
+                  border: "1px solid rgba(204, 120, 92, 0.3)",
+                  boxShadow: "0 6px 18px rgba(0, 0, 0, 0.2)",
                   display: "flex",
                   flexDirection: "column",
-                  gap: "8px",
-                  fontSize: "12px",
-                  fontFamily: "var(--font-mono)",
+                  gap: "10px",
                 }}
               >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ color: "var(--color-on-dark-soft)" }}>priority (score)</span>
-                  <span style={{ color: "var(--color-primary)", fontWeight: 600 }}>Urgent (2.85)</span>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                  <div
+                    style={{
+                      width: "18px",
+                      height: "18px",
+                      borderRadius: "50%",
+                      border: "2px solid var(--color-primary)",
+                      marginTop: "2px",
+                      flexShrink: 0,
+                    }}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: "14px", fontWeight: 500, color: "#ffffff", lineHeight: 1.35 }}>
+                      Prepare presentation deck for quarterly review
+                    </div>
+                  </div>
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ color: "var(--color-on-dark-soft)" }}>deadline (choice)</span>
-                  <span style={{ color: "var(--color-on-dark)" }}>2026-09-25 ✓</span>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ color: "var(--color-on-dark-soft)" }}>mode (execution)</span>
-                  <span style={{ color: "#2e7559" }}>Solo Direct Action</span>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ color: "var(--color-on-dark-soft)" }}>is_task (actionability)</span>
-                  <span style={{ color: "var(--color-success)" }}>0.95 (True)</span>
+
+                {/* Metadata Chips: Priority, Deadline, Status */}
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", paddingTop: "2px" }}>
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      fontSize: "11px",
+                      fontWeight: 600,
+                      padding: "3px 8px",
+                      borderRadius: "4px",
+                      backgroundColor: "rgba(204, 120, 92, 0.22)",
+                      color: "#e8947b",
+                      border: "1px solid rgba(204, 120, 92, 0.3)",
+                    }}
+                  >
+                    ● Urgent Priority
+                  </span>
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      fontSize: "11px",
+                      padding: "3px 8px",
+                      borderRadius: "4px",
+                      backgroundColor: "rgba(255, 255, 255, 0.08)",
+                      color: "var(--color-on-dark-soft)",
+                    }}
+                  >
+                    📅 Friday (Sep 25)
+                  </span>
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      fontSize: "11px",
+                      padding: "3px 8px",
+                      borderRadius: "4px",
+                      backgroundColor: "rgba(46, 117, 89, 0.18)",
+                      color: "#4ade80",
+                    }}
+                  >
+                    ⚡ Active Focus
+                  </span>
                 </div>
               </div>
 
-              {/* Direct Clickable Links */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "4px" }}>
-                <Link
-                  href="/workspace"
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "6px",
-                    padding: "10px",
-                    borderRadius: "var(--radius-md)",
-                    backgroundColor: "rgba(204, 120, 92, 0.15)",
-                    color: "var(--color-primary)",
-                    textDecoration: "none",
-                    fontSize: "12px",
-                    fontWeight: 500,
-                    transition: "background-color 0.15s ease",
-                  }}
-                >
-                  <span>Launch Interactive Workspace</span>
-                  <span>→</span>
-                </Link>
-
-                <Link
-                  href="/workspace?tab=basis"
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "5px",
-                    padding: "6px",
-                    color: "var(--color-on-dark-soft)",
-                    textDecoration: "none",
-                    fontSize: "11px",
-                    transition: "color 0.15s ease",
-                  }}
-                >
-                  <span>⚖ On what basis does Jev evaluate? Learn more</span>
-                </Link>
-              </div>
+              {/* Direct Workspace Action Link */}
+              <Link
+                href="/workspace"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "6px",
+                  padding: "12px",
+                  marginTop: "4px",
+                  borderRadius: "var(--radius-md)",
+                  backgroundColor: "rgba(204, 120, 92, 0.18)",
+                  color: "var(--color-primary)",
+                  textDecoration: "none",
+                  fontSize: "13px",
+                  fontWeight: 500,
+                  transition: "all 0.15s ease",
+                  border: "1px solid rgba(204, 120, 92, 0.25)",
+                }}
+              >
+                <span>Launch Interactive Workspace</span>
+                <span>→</span>
+              </Link>
             </div>
           </div>
         </section>
@@ -356,7 +332,7 @@ export default function Home() {
           backgroundColor: "var(--color-canvas)",
         }}
       >
-        Powered by TypeSafe AI Jev model. Synchronized with MongoDB.
+        Cadence — Humanist Personal Task Space
       </footer>
     </div>
   );
