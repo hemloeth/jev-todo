@@ -443,6 +443,8 @@ export default function WorkspacePage() {
   // Quick Add input state
   const [quickAddText, setQuickAddText] = useState("");
   const [quickAddPriority, setQuickAddPriority] = useState("Days");
+  const [isAddingTask, setIsAddingTask] = useState(false);
+  const [convertingId, setConvertingId] = useState(null);
   const quickAddInputRef = useRef(null);
 
   // Check URL params for ?drawer=open or ?demo=true or ?tab=basis
@@ -674,7 +676,9 @@ export default function WorkspacePage() {
   // Quick Add Task with Natural Language Date Recognition ("today", "tomorrow", "in a week", etc.)
   const handleQuickAdd = (e) => {
     e.preventDefault();
-    if (!quickAddText.trim()) return;
+    if (!quickAddText.trim() || isAddingTask) return;
+
+    setIsAddingTask(true);
 
     // Detect natural relative date (today, tomorrow, in a week, etc.)
     const detected = resolveNaturalDate(quickAddText.trim());
@@ -737,10 +741,12 @@ export default function WorkspacePage() {
       return updated;
     });
     setQuickAddText("");
+    setTimeout(() => setIsAddingTask(false), 300);
   };
 
   // Convert Non-Task to Task
   const handleConvertToTask = (item) => {
+    setConvertingId(item.id);
     const newTask = {
       id: `task_${Date.now()}`,
       text: normalizeTaskText(item.text),
@@ -764,6 +770,7 @@ export default function WorkspacePage() {
     });
     setNonTasks((prev) => prev.filter((nt) => nt.id !== item.id));
     setCurrentView("active");
+    setTimeout(() => setConvertingId(null), 400);
   };
 
   // AI Sort & Ingest
@@ -948,32 +955,6 @@ export default function WorkspacePage() {
           </Link>
 
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            {/* Database Live Status Indicator */}
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "5px",
-                fontSize: "10.5px",
-                padding: "2px 7px",
-                borderRadius: "12px",
-                backgroundColor: dbStatus === "connected" ? "rgba(46, 117, 89, 0.1)" : "rgba(107, 102, 95, 0.1)",
-                color: dbStatus === "connected" ? "#2e7559" : "var(--color-muted)",
-                fontWeight: 500,
-              }}
-              title={dbStatus === "connected" ? "Synchronized with MongoDB Atlas" : "Local Storage fallback"}
-            >
-              <span
-                style={{
-                  width: "6px",
-                  height: "6px",
-                  borderRadius: "50%",
-                  backgroundColor: dbStatus === "connected" ? "#2e7559" : "#c44d3c",
-                }}
-              />
-              {isSyncingDb ? "Syncing" : dbStatus === "connected" ? "Atlas" : "Offline"}
-            </span>
-
             {/* Mobile Drawer Close Button */}
             <button
               type="button"
@@ -1021,7 +1002,8 @@ export default function WorkspacePage() {
               setShowAiDrawer(!showAiDrawer);
               setShowMobileSidebar(false);
             }}
-            className="btn-secondary"
+            disabled={sortingAi}
+            className={`btn-secondary ${sortingAi ? "btn-evaluating" : ""}`}
             style={{
               height: "34px",
               fontSize: "12.5px",
@@ -1035,8 +1017,17 @@ export default function WorkspacePage() {
               borderColor: showAiDrawer ? "var(--color-primary)" : "var(--color-hairline)",
             }}
           >
-            <span style={{ color: "var(--color-primary)" }}>✦</span>
-            <span>{showAiDrawer ? "Hide AI Parser" : "Paste Messy Notes..."}</span>
+            {sortingAi ? (
+              <>
+                <span className="btn-spinner btn-spinner-coral" style={{ width: "12px", height: "12px" }} />
+                <span>Evaluating notes...</span>
+              </>
+            ) : (
+              <>
+                <span style={{ color: "var(--color-primary)" }}>✦</span>
+                <span>{showAiDrawer ? "Hide AI Parser" : "Paste Messy Notes..."}</span>
+              </>
+            )}
           </button>
         </div>
 
@@ -1310,12 +1301,22 @@ export default function WorkspacePage() {
             <button
               type="button"
               onClick={() => setShowAiDrawer(!showAiDrawer)}
-              className="btn-secondary"
-              style={{ height: "32px", fontSize: "11.5px", padding: "0 10px", gap: "4px" }}
+              disabled={sortingAi}
+              className={`btn-secondary ${sortingAi ? "btn-evaluating" : ""}`}
+              style={{ height: "32px", fontSize: "11.5px", padding: "0 10px", gap: "5px", display: "inline-flex", alignItems: "center" }}
               title="Open AI Note Parser"
             >
-              <span style={{ color: "var(--color-primary)" }}>✦</span>
-              <span>{showAiDrawer ? "Hide" : "Ingest"}</span>
+              {sortingAi ? (
+                <>
+                  <span className="btn-spinner btn-spinner-coral" style={{ width: "11px", height: "11px" }} />
+                  <span>Evaluating...</span>
+                </>
+              ) : (
+                <>
+                  <span style={{ color: "var(--color-primary)" }}>✦</span>
+                  <span>{showAiDrawer ? "Hide" : "Ingest"}</span>
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -1527,10 +1528,26 @@ export default function WorkspacePage() {
                   type="button"
                   onClick={handleAiSortAndMerge}
                   disabled={sortingAi || !notesText.trim()}
-                  className="btn-primary"
-                  style={{ height: "34px", fontSize: "13px" }}
+                  className={`btn-primary ${sortingAi ? "btn-evaluating" : ""}`}
+                  style={{
+                    height: "36px",
+                    fontSize: "13px",
+                    minWidth: "185px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                  }}
                 >
-                  {sortingAi ? "Evaluating with Jev..." : "Sort & Ingest Notes →"}
+                  {sortingAi ? (
+                    <>
+                      <span className="btn-spinner" />
+                      <span>Evaluating with Jev</span>
+                      <span className="eval-dots"><span>.</span><span>.</span><span>.</span></span>
+                    </>
+                  ) : (
+                    <span>Sort &amp; Ingest Notes →</span>
+                  )}
                 </button>
               </div>
             </div>
@@ -1538,15 +1555,8 @@ export default function WorkspacePage() {
 
           {/* QUICK ADD INLINE BAR (Visible on task views) */}
           {currentView !== "ideas" && currentView !== "basis" && (
-            <form
-              onSubmit={handleQuickAdd}
-              style={{
-                display: "flex",
-                gap: "8px",
-                alignItems: "center",
-              }}
-            >
-              <div style={{ flex: 1, position: "relative", display: "flex", alignItems: "center" }}>
+            <form onSubmit={handleQuickAdd} className="quick-add-form">
+              <div className="quick-add-input-wrapper">
                 <input
                   ref={quickAddInputRef}
                   type="text"
@@ -1568,13 +1578,13 @@ export default function WorkspacePage() {
                 {/* Live Detected Natural Date Chip */}
                 {quickAddText.trim() && resolveNaturalDate(quickAddText) && (
                   <span
-                    className={
+                    className={`quick-add-detected-badge ${
                       resolveNaturalDate(quickAddText).label === "Today"
                         ? "badge-coral"
                         : resolveNaturalDate(quickAddText).label === "Tomorrow"
                         ? "badge-amber"
                         : "badge-teal"
-                    }
+                    }`}
                     style={{
                       position: "absolute",
                       right: "8px",
@@ -1588,269 +1598,493 @@ export default function WorkspacePage() {
                 )}
               </div>
 
-              <select
-                value={quickAddPriority}
-                onChange={(e) => setQuickAddPriority(e.target.value)}
-                className={`claude-select priority-${quickAddPriority.toLowerCase()}`}
-                style={{
-                  height: "38px",
-                  minWidth: "120px",
-                  fontSize: "12.5px",
-                }}
-                title="Default Priority"
-              >
-                <option value="Urgent">🔥 Urgent</option>
-                <option value="Days">⚡ Days</option>
-                <option value="Weeks">📅 Weeks</option>
-                <option value="Someday">⏳ Someday</option>
-              </select>
+              <div className="quick-add-actions">
+                <select
+                  value={quickAddPriority}
+                  onChange={(e) => setQuickAddPriority(e.target.value)}
+                  className={`claude-select priority-${quickAddPriority.toLowerCase()}`}
+                  style={{
+                    height: "38px",
+                    minWidth: "115px",
+                    fontSize: "12.5px",
+                  }}
+                  title="Default Priority"
+                >
+                  <option value="Urgent">🔥 Urgent</option>
+                  <option value="Days">⚡ Days</option>
+                  <option value="Weeks">📅 Weeks</option>
+                  <option value="Someday">⏳ Someday</option>
+                </select>
 
-              <button
-                type="submit"
-                disabled={!quickAddText.trim()}
-                className="btn-primary"
-                style={{ height: "38px", padding: "0 16px", fontSize: "13px", borderRadius: "var(--radius-sm)" }}
-              >
-                Add
-              </button>
+                <button
+                  type="submit"
+                  disabled={!quickAddText.trim() || isAddingTask}
+                  className={`btn-primary ${isAddingTask ? "btn-evaluating" : ""}`}
+                  style={{
+                    height: "38px",
+                    padding: "0 16px",
+                    fontSize: "13px",
+                    borderRadius: "var(--radius-sm)",
+                    minWidth: "64px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "6px",
+                  }}
+                >
+                  {isAddingTask ? <span className="btn-spinner" style={{ width: "12px", height: "12px" }} /> : <span>Add</span>}
+                </button>
+              </div>
             </form>
           )}
 
           {/* TAB: TASKS VIEWS */}
           {currentView !== "ideas" && currentView !== "basis" && (
-            <div className="claude-card" style={{ padding: 0, overflow: "hidden" }}>
-              <div className="claude-table-container">
-                {filteredTasks.length === 0 ? (
-                  <div style={{ padding: "48px 24px", textAlign: "center", color: "var(--color-muted)" }}>
-                    <p style={{ margin: 0, fontSize: "14px" }}>
-                      {searchQuery
-                        ? `No tasks matching "${searchQuery}".`
-                        : currentView === "completed"
-                        ? "No completed tasks yet. Check off items as you finish them."
-                        : currentView === "urgent"
-                        ? "No urgent tasks. Clear to focus on routine items."
-                        : currentView === "scheduled"
-                        ? "No scheduled tasks with deadlines."
-                        : "No tasks found. Use the quick add bar above or paste messy notes."}
-                    </p>
+            <>
+              {filteredTasks.length === 0 ? (
+                <div className="claude-card" style={{ padding: "48px 24px", textAlign: "center", color: "var(--color-muted)" }}>
+                  <p style={{ margin: 0, fontSize: "14px" }}>
+                    {searchQuery
+                      ? `No tasks matching "${searchQuery}".`
+                      : currentView === "completed"
+                      ? "No completed tasks yet. Check off items as you finish them."
+                      : currentView === "urgent"
+                      ? "No urgent tasks. Clear to focus on routine items."
+                      : currentView === "scheduled"
+                      ? "No scheduled tasks with deadlines."
+                      : "No tasks found. Use the quick add bar above or paste messy notes."}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {/* Desktop Table View */}
+                  <div className="desktop-tasks-table claude-card" style={{ padding: 0, overflow: "hidden" }}>
+                    <div className="claude-table-container">
+                      <table className="claude-table">
+                        <thead>
+                          <tr>
+                            <th style={{ width: "36px", padding: "10px 8px 10px 14px" }}></th>
+                            <th style={{ minWidth: "260px" }}>Task</th>
+                            <th style={{ width: "160px", minWidth: "160px" }}>Priority &amp; Score</th>
+                            <th style={{ width: "135px", minWidth: "135px" }}>Deadline</th>
+                            <th style={{ width: "140px", minWidth: "140px" }}>Decision Basis</th>
+                            <th style={{ width: "36px", textAlign: "right", paddingRight: "14px" }}></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredTasks.map((task) => (
+                            <tr key={task.id} style={{ opacity: task.completed ? 0.6 : 1 }}>
+                              {/* Checkbox */}
+                              <td style={{ verticalAlign: "top", paddingTop: "12px" }}>
+                                <input
+                                  type="checkbox"
+                                  checked={task.completed}
+                                  onChange={() => handleToggleComplete(task.id)}
+                                  className="claude-checkbox"
+                                  aria-label="Toggle completed"
+                                />
+                              </td>
+
+                              {/* Task Text - Auto-expanding for 100% full visibility */}
+                              <td style={{ verticalAlign: "top", paddingTop: "8px" }}>
+                                <textarea
+                                  value={task.text}
+                                  rows={1}
+                                  onChange={(e) => {
+                                    handleUpdateField(task.id, "text", e.target.value);
+                                    e.target.style.height = "auto";
+                                    e.target.style.height = e.target.scrollHeight + "px";
+                                  }}
+                                  ref={(el) => {
+                                    if (el) {
+                                      el.style.height = "auto";
+                                      el.style.height = el.scrollHeight + "px";
+                                    }
+                                  }}
+                                  className="claude-task-textarea"
+                                  style={{
+                                    color: task.completed ? "var(--color-muted)" : "var(--color-ink)",
+                                    textDecoration: task.completed ? "line-through" : "none",
+                                  }}
+                                />
+                              </td>
+
+                              {/* Priority Selector & Calibrated Score */}
+                              <td style={{ verticalAlign: "top", paddingTop: "8px" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "nowrap" }}>
+                                  <select
+                                    value={task.priority_label || "Days"}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      let score = 1.0;
+                                      if (val === "Urgent") score = 3.0;
+                                      else if (val === "Days") score = 2.0;
+                                      else if (val === "Weeks") score = 1.0;
+                                      else if (val === "Someday") score = 0.0;
+                                      handleUpdateField(task.id, "priority_label", val);
+                                      handleUpdateField(task.id, "priority_score", score);
+                                    }}
+                                    className={`claude-select priority-${(task.priority_label || "days").toLowerCase()}`}
+                                    style={{
+                                      height: "28px",
+                                      minWidth: "100px",
+                                    }}
+                                    title="Calibrated Priority"
+                                  >
+                                    <option value="Urgent">🔥 Urgent</option>
+                                    <option value="Days">⚡ Days</option>
+                                    <option value="Weeks">📅 Weeks</option>
+                                    <option value="Someday">⏳ Someday</option>
+                                  </select>
+
+                                  <span
+                                    className="score-pill"
+                                    title={`Calibrated urgency score: ${task.priority_score ? task.priority_score.toFixed(2) : "2.00"} / 3.0`}
+                                  >
+                                    {task.priority_score ? task.priority_score.toFixed(1) : "2.0"}
+                                  </span>
+                                </div>
+                              </td>
+
+                              {/* Deadline - Custom Modern Themed Popover Picker */}
+                              <td style={{ verticalAlign: "top", paddingTop: "8px" }}>
+                                <ModernDatePicker
+                                  value={task.deadline || ""}
+                                  onChange={(newDate) => handleUpdateField(task.id, "deadline", newDate)}
+                                />
+                              </td>
+
+                              {/* Decision Basis & Score Badge */}
+                              <td>
+                                <button
+                                  type="button"
+                                  onClick={() => setInspectingItem(task)}
+                                  className="badge-teal"
+                                  style={{
+                                    cursor: "pointer",
+                                    border: "none",
+                                    fontSize: "11px",
+                                    padding: "3px 8px",
+                                    borderRadius: "12px",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "5px",
+                                    fontWeight: 500,
+                                    transition: "all 0.1s ease",
+                                  }}
+                                  title="Click to inspect mathematical decision basis"
+                                >
+                                  <span>✓ Task</span>
+                                  <span>({Math.round((task.is_task_confidence || 0.95) * 100)}%)</span>
+                                  <span style={{ opacity: 0.6, fontSize: "10px" }}>ⓘ</span>
+                                </button>
+                              </td>
+
+                              {/* Action: Delete Task (opens modal) */}
+                              <td style={{ textAlign: "right" }}>
+                                <button
+                                  type="button"
+                                  onClick={() => promptDeleteTask(task)}
+                                  style={{
+                                    background: "transparent",
+                                    border: "none",
+                                    color: "var(--color-muted)",
+                                    cursor: "pointer",
+                                    fontSize: "13px",
+                                    padding: "4px 6px",
+                                    borderRadius: "4px",
+                                    transition: "color 0.15s ease",
+                                  }}
+                                  title="Delete Task"
+                                >
+                                  ✕
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                ) : (
-                  <table className="claude-table">
-                    <thead>
-                      <tr>
-                        <th style={{ width: "36px", padding: "10px 8px 10px 14px" }}></th>
-                        <th style={{ minWidth: "260px" }}>Task</th>
-                        <th style={{ width: "160px", minWidth: "160px" }}>Priority &amp; Score</th>
-                        <th style={{ width: "135px", minWidth: "135px" }}>Deadline</th>
-                        <th style={{ width: "140px", minWidth: "140px" }}>Decision Basis</th>
-                        <th style={{ width: "36px", textAlign: "right", paddingRight: "14px" }}></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredTasks.map((task) => (
-                        <tr key={task.id} style={{ opacity: task.completed ? 0.6 : 1 }}>
-                          {/* Checkbox */}
-                          <td style={{ verticalAlign: "top", paddingTop: "12px" }}>
-                            <input
-                              type="checkbox"
-                              checked={task.completed}
-                              onChange={() => handleToggleComplete(task.id)}
-                              className="claude-checkbox"
-                              aria-label="Toggle completed"
-                            />
-                          </td>
 
-                          {/* Task Text - Auto-expanding for 100% full visibility */}
-                          <td style={{ verticalAlign: "top", paddingTop: "8px" }}>
-                            <textarea
-                              value={task.text}
-                              rows={1}
+                  {/* Mobile Touch Cards View (visible on <= 768px) */}
+                  <div className="mobile-tasks-cards">
+                    {filteredTasks.map((task) => (
+                      <div
+                        key={task.id}
+                        className="mobile-task-card"
+                        style={{ opacity: task.completed ? 0.6 : 1 }}
+                      >
+                        {/* Top Row: Checkbox + Auto-expanding Textarea */}
+                        <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", width: "100%" }}>
+                          <input
+                            type="checkbox"
+                            checked={task.completed}
+                            onChange={() => handleToggleComplete(task.id)}
+                            className="claude-checkbox"
+                            aria-label="Toggle completed"
+                            style={{ marginTop: "4px", width: "18px", height: "18px", flexShrink: 0 }}
+                          />
+                          <textarea
+                            value={task.text}
+                            rows={1}
+                            onChange={(e) => {
+                              handleUpdateField(task.id, "text", e.target.value);
+                              e.target.style.height = "auto";
+                              e.target.style.height = e.target.scrollHeight + "px";
+                            }}
+                            ref={(el) => {
+                              if (el) {
+                                el.style.height = "auto";
+                                el.style.height = el.scrollHeight + "px";
+                              }
+                            }}
+                            className="claude-task-textarea"
+                            style={{
+                              fontSize: "14px",
+                              lineHeight: 1.45,
+                              color: task.completed ? "var(--color-muted)" : "var(--color-ink)",
+                              textDecoration: task.completed ? "line-through" : "none",
+                            }}
+                          />
+                        </div>
+
+                        {/* Middle Row: Priority Selector, Score Pill & Deadline */}
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            gap: "8px",
+                            flexWrap: "wrap",
+                            paddingTop: "6px",
+                            borderTop: "1px dashed var(--color-hairline-soft)",
+                          }}
+                        >
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                            <select
+                              value={task.priority_label || "Days"}
                               onChange={(e) => {
-                                handleUpdateField(task.id, "text", e.target.value);
-                                e.target.style.height = "auto";
-                                e.target.style.height = e.target.scrollHeight + "px";
+                                const val = e.target.value;
+                                let score = 1.0;
+                                if (val === "Urgent") score = 3.0;
+                                else if (val === "Days") score = 2.0;
+                                else if (val === "Weeks") score = 1.0;
+                                else if (val === "Someday") score = 0.0;
+                                handleUpdateField(task.id, "priority_label", val);
+                                handleUpdateField(task.id, "priority_score", score);
                               }}
-                              ref={(el) => {
-                                if (el) {
-                                  el.style.height = "auto";
-                                  el.style.height = el.scrollHeight + "px";
-                                }
-                              }}
-                              className="claude-task-textarea"
+                              className={`claude-select priority-${(task.priority_label || "days").toLowerCase()}`}
                               style={{
-                                color: task.completed ? "var(--color-muted)" : "var(--color-ink)",
-                                textDecoration: task.completed ? "line-through" : "none",
+                                height: "28px",
+                                minWidth: "98px",
+                                fontSize: "11.5px",
                               }}
-                            />
-                          </td>
+                              title="Calibrated Priority"
+                            >
+                              <option value="Urgent">🔥 Urgent</option>
+                              <option value="Days">⚡ Days</option>
+                              <option value="Weeks">📅 Weeks</option>
+                              <option value="Someday">⏳ Someday</option>
+                            </select>
 
-                          {/* Priority Selector & Calibrated Score */}
-                          <td style={{ verticalAlign: "top", paddingTop: "8px" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "nowrap" }}>
-                              <select
-                                value={task.priority_label || "Days"}
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  let score = 1.0;
-                                  if (val === "Urgent") score = 3.0;
-                                  else if (val === "Days") score = 2.0;
-                                  else if (val === "Weeks") score = 1.0;
-                                  else if (val === "Someday") score = 0.0;
-                                  handleUpdateField(task.id, "priority_label", val);
-                                  handleUpdateField(task.id, "priority_score", score);
-                                }}
-                                className={`claude-select priority-${(task.priority_label || "days").toLowerCase()}`}
-                                style={{
-                                  height: "28px",
-                                  minWidth: "100px",
-                                }}
-                                title="Calibrated Priority"
-                              >
-                                <option value="Urgent">🔥 Urgent</option>
-                                <option value="Days">⚡ Days</option>
-                                <option value="Weeks">📅 Weeks</option>
-                                <option value="Someday">⏳ Someday</option>
-                              </select>
+                            <span
+                              className="score-pill"
+                              title={`Calibrated urgency score: ${task.priority_score ? task.priority_score.toFixed(1) : "2.0"} / 3.0`}
+                            >
+                              {task.priority_score ? task.priority_score.toFixed(1) : "2.0"}
+                            </span>
+                          </div>
 
-                              <span
-                                className="score-pill"
-                                title={`Calibrated urgency score: ${task.priority_score ? task.priority_score.toFixed(2) : "2.00"} / 3.0`}
-                              >
-                                {task.priority_score ? task.priority_score.toFixed(1) : "2.0"}
-                              </span>
-                            </div>
-                          </td>
-
-                          {/* Deadline - Custom Modern Themed Popover Picker (NO green badge) */}
-                          <td style={{ verticalAlign: "top", paddingTop: "8px" }}>
+                          <div>
                             <ModernDatePicker
                               value={task.deadline || ""}
                               onChange={(newDate) => handleUpdateField(task.id, "deadline", newDate)}
                             />
-                          </td>
+                          </div>
+                        </div>
 
-                          {/* Decision Basis & Score Badge */}
-                          <td>
-                            <button
-                              type="button"
-                              onClick={() => setInspectingItem(task)}
-                              className="badge-teal"
-                              style={{
-                                cursor: "pointer",
-                                border: "none",
-                                fontSize: "11px",
-                                padding: "3px 8px",
-                                borderRadius: "12px",
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: "5px",
-                                fontWeight: 500,
-                                transition: "all 0.1s ease",
-                              }}
-                              title="Click to inspect mathematical decision basis"
-                            >
-                              <span>✓ Task</span>
-                              <span>({Math.round((task.is_task_confidence || 0.95) * 100)}%)</span>
-                              <span style={{ opacity: 0.6, fontSize: "10px" }}>ⓘ</span>
-                            </button>
-                          </td>
+                        {/* Bottom Row: Decision Basis badge + Delete button */}
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "4px" }}>
+                          <button
+                            type="button"
+                            onClick={() => setInspectingItem(task)}
+                            className="badge-teal"
+                            style={{
+                              cursor: "pointer",
+                              border: "none",
+                              fontSize: "11px",
+                              padding: "3px 8px",
+                              borderRadius: "12px",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "4px",
+                              fontWeight: 500,
+                            }}
+                            title="Click to inspect mathematical decision basis"
+                          >
+                            <span>✓ Task</span>
+                            <span>({Math.round((task.is_task_confidence || 0.95) * 100)}%)</span>
+                            <span style={{ opacity: 0.6, fontSize: "10px" }}>ⓘ</span>
+                          </button>
 
-                          {/* Action: Delete Task (opens modal) */}
-                          <td style={{ textAlign: "right" }}>
-                            <button
-                              type="button"
-                              onClick={() => promptDeleteTask(task)}
-                              style={{
-                                background: "transparent",
-                                border: "none",
-                                color: "var(--color-muted)",
-                                cursor: "pointer",
-                                fontSize: "13px",
-                                padding: "4px 6px",
-                                borderRadius: "4px",
-                                transition: "color 0.15s ease",
-                              }}
-                              title="Delete Task"
-                            >
-                              ✕
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
-              </div>
-            </div>
+                          <button
+                            type="button"
+                            onClick={() => promptDeleteTask(task)}
+                            style={{
+                              background: "transparent",
+                              border: "none",
+                              color: "var(--color-muted)",
+                              cursor: "pointer",
+                              fontSize: "14px",
+                              padding: "4px 8px",
+                              borderRadius: "4px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                            title="Delete Task"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </>
           )}
 
           {/* TAB: IDEAS & FACTS */}
           {currentView === "ideas" && (
-            <div className="claude-card" style={{ padding: 0, overflow: "hidden" }}>
-              <div className="claude-table-container">
-                {nonTasks.length === 0 ? (
-                  <div style={{ padding: "48px 24px", textAlign: "center", color: "var(--color-muted)" }}>
-                    <p style={{ margin: 0, fontSize: "14px" }}>
-                      No ideas or facts saved. Items with is_task &lt; 0.50 are automatically routed here.
-                    </p>
+            <>
+              {nonTasks.length === 0 ? (
+                <div className="claude-card" style={{ padding: "48px 24px", textAlign: "center", color: "var(--color-muted)" }}>
+                  <p style={{ margin: 0, fontSize: "14px" }}>
+                    No ideas or facts saved. Items with is_task &lt; 0.50 are automatically routed here.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {/* Desktop Table View */}
+                  <div className="desktop-ideas-table claude-card" style={{ padding: 0, overflow: "hidden" }}>
+                    <div className="claude-table-container">
+                      <table className="claude-table">
+                        <thead>
+                          <tr>
+                            <th>Idea / Fact Note</th>
+                            <th style={{ width: "170px" }}>Actionability Score</th>
+                            <th style={{ width: "230px" }}>Classification Basis</th>
+                            <th style={{ width: "140px", textAlign: "right" }}>Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {nonTasks.map((item) => (
+                            <tr key={item.id}>
+                              <td style={{ color: "var(--color-body)" }}>{item.text}</td>
+                              <td>
+                                <button
+                                  type="button"
+                                  onClick={() => setInspectingItem(item)}
+                                  className="badge-muted"
+                                  style={{
+                                    cursor: "pointer",
+                                    border: "none",
+                                    fontSize: "11px",
+                                    padding: "3px 8px",
+                                    borderRadius: "12px",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "5px",
+                                    fontWeight: 500,
+                                  }}
+                                  title="Click to inspect classification basis"
+                                >
+                                  <span>💡 Idea ({Math.round((item.is_task_confidence || 0.08) * 100)}%)</span>
+                                  <span style={{ opacity: 0.6, fontSize: "10px" }}>ⓘ</span>
+                                </button>
+                              </td>
+                              <td style={{ fontSize: "12px", color: "var(--color-muted)", lineHeight: 1.4 }}>
+                                {(item.is_task_confidence || 0) < 0.2
+                                  ? "Factual trivia / statement (no actionable intent)"
+                                  : "Speculative thought (< 50% action threshold)"}
+                              </td>
+                              <td style={{ textAlign: "right" }}>
+                                <button
+                                  onClick={() => handleConvertToTask(item)}
+                                  disabled={convertingId === item.id}
+                                  className={`btn-secondary ${convertingId === item.id ? "btn-evaluating" : ""}`}
+                                  style={{ height: "28px", padding: "0 10px", fontSize: "12px", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                                >
+                                  {convertingId === item.id ? (
+                                    <>
+                                      <span className="btn-spinner btn-spinner-coral" style={{ width: "11px", height: "11px" }} />
+                                      <span>Converting...</span>
+                                    </>
+                                  ) : (
+                                    <span>Convert to Task →</span>
+                                  )}
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                ) : (
-                  <table className="claude-table">
-                    <thead>
-                      <tr>
-                        <th>Idea / Fact Note</th>
-                        <th style={{ width: "170px" }}>Actionability Score</th>
-                        <th style={{ width: "230px" }}>Classification Basis</th>
-                        <th style={{ width: "140px", textAlign: "right" }}>Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {nonTasks.map((item) => (
-                        <tr key={item.id}>
-                          <td style={{ color: "var(--color-body)" }}>{item.text}</td>
-                          <td>
-                            <button
-                              type="button"
-                              onClick={() => setInspectingItem(item)}
-                              className="badge-muted"
-                              style={{
-                                cursor: "pointer",
-                                border: "none",
-                                fontSize: "11px",
-                                padding: "3px 8px",
-                                borderRadius: "12px",
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: "5px",
-                                fontWeight: 500,
-                              }}
-                              title="Click to inspect classification basis"
-                            >
-                              <span>💡 Idea ({Math.round((item.is_task_confidence || 0.08) * 100)}%)</span>
-                              <span style={{ opacity: 0.6, fontSize: "10px" }}>ⓘ</span>
-                            </button>
-                          </td>
-                          <td style={{ fontSize: "12px", color: "var(--color-muted)", lineHeight: 1.4 }}>
-                            {(item.is_task_confidence || 0) < 0.2
-                              ? "Factual trivia / statement (no actionable intent)"
-                              : "Speculative thought (< 50% action threshold)"}
-                          </td>
-                          <td style={{ textAlign: "right" }}>
-                            <button
-                              onClick={() => handleConvertToTask(item)}
-                              className="btn-secondary"
-                              style={{ height: "28px", padding: "0 10px", fontSize: "12px" }}
-                            >
-                              Convert to Task →
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
-              </div>
-            </div>
+
+                  {/* Mobile Touch Cards View (visible on <= 768px) */}
+                  <div className="mobile-ideas-cards">
+                    {nonTasks.map((item) => (
+                      <div key={item.id} className="mobile-task-card">
+                        <p style={{ margin: 0, fontSize: "14px", color: "var(--color-ink)", lineHeight: 1.5, wordBreak: "break-word" }}>
+                          {item.text}
+                        </p>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", flexWrap: "wrap", paddingTop: "4px" }}>
+                          <button
+                            type="button"
+                            onClick={() => setInspectingItem(item)}
+                            className="badge-muted"
+                            style={{
+                              cursor: "pointer",
+                              border: "none",
+                              fontSize: "11px",
+                              padding: "3px 8px",
+                              borderRadius: "12px",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "4px",
+                              fontWeight: 500,
+                            }}
+                            title="Click to inspect classification basis"
+                          >
+                            <span>💡 Idea ({Math.round((item.is_task_confidence || 0.08) * 100)}%)</span>
+                            <span style={{ opacity: 0.6, fontSize: "10px" }}>ⓘ</span>
+                          </button>
+
+                          <button
+                            onClick={() => handleConvertToTask(item)}
+                            disabled={convertingId === item.id}
+                            className={`btn-secondary ${convertingId === item.id ? "btn-evaluating" : ""}`}
+                            style={{ height: "30px", padding: "0 12px", fontSize: "12px", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                          >
+                            {convertingId === item.id ? (
+                              <>
+                                <span className="btn-spinner btn-spinner-coral" style={{ width: "11px", height: "11px" }} />
+                                <span>Converting...</span>
+                              </>
+                            ) : (
+                              <span>Convert to Task →</span>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </>
           )}
 
           {/* TAB: EVALUATION BASIS */}
@@ -1875,14 +2109,7 @@ export default function WorkspacePage() {
               </div>
 
               {/* Pillars Grid: 2-Column Balanced Cards */}
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-                  gap: "20px",
-                  marginBottom: "28px",
-                }}
-              >
+              <div className="basis-cards-grid">
                 {/* 1. is_task */}
                 <div
                   style={{
@@ -2131,20 +2358,7 @@ MODE = "solo_personal"          # Direct execution synchronized with MongoDB Atl
             if (e.target === e.currentTarget) setTaskToDelete(null);
           }}
         >
-          <div
-            style={{
-              width: "100%",
-              maxWidth: "430px",
-              backgroundColor: "#ffffff",
-              borderRadius: "14px",
-              border: "1px solid #e5e2da",
-              boxShadow: "0 20px 40px -10px rgba(24, 23, 21, 0.2), 0 1px 3px rgba(24, 23, 21, 0.05)",
-              padding: "26px",
-              position: "relative",
-              overflow: "hidden",
-              animation: "scaleIn 0.15s ease-out",
-            }}
-          >
+          <div className="claude-modal-box" style={{ maxWidth: "430px" }}>
             <div
               style={{
                 position: "absolute",
@@ -2277,20 +2491,7 @@ MODE = "solo_personal"          # Direct execution synchronized with MongoDB Atl
             if (e.target === e.currentTarget) setInspectingItem(null);
           }}
         >
-          <div
-            style={{
-              width: "100%",
-              maxWidth: "520px",
-              backgroundColor: "#ffffff",
-              borderRadius: "14px",
-              border: "1px solid #e5e2da",
-              boxShadow: "0 24px 48px -12px rgba(24, 23, 21, 0.25)",
-              padding: "28px",
-              position: "relative",
-              overflow: "hidden",
-              animation: "scaleIn 0.15s ease-out",
-            }}
-          >
+          <div className="claude-modal-box">
             {/* Top Accent Strip */}
             <div
               style={{
@@ -2380,7 +2581,7 @@ MODE = "solo_personal"          # Direct execution synchronized with MongoDB Atl
             </div>
 
             {/* 3 Metric Breakdown Cards */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", marginBottom: "22px" }}>
+            <div className="inspect-metrics-grid">
               {/* Metric 1: Actionability */}
               <div
                 style={{
@@ -2461,10 +2662,18 @@ MODE = "solo_personal"          # Direct execution synchronized with MongoDB Atl
                     handleConvertToTask(inspectingItem);
                     setInspectingItem(null);
                   }}
-                  className="btn-primary"
-                  style={{ height: "36px", padding: "0 14px", fontSize: "12.5px" }}
+                  disabled={convertingId === inspectingItem.id}
+                  className={`btn-primary ${convertingId === inspectingItem.id ? "btn-evaluating" : ""}`}
+                  style={{ height: "36px", padding: "0 14px", fontSize: "12.5px", display: "inline-flex", alignItems: "center", gap: "6px" }}
                 >
-                  Convert to Task →
+                  {convertingId === inspectingItem.id ? (
+                    <>
+                      <span className="btn-spinner" style={{ width: "12px", height: "12px" }} />
+                      <span>Converting...</span>
+                    </>
+                  ) : (
+                    <span>Convert to Task →</span>
+                  )}
                 </button>
               )}
               <button

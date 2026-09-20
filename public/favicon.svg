@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32" fill="none">
+  <style>
+    .cadence-arc { stroke: #141413; }
+    @media (prefers-color-scheme: dark) {
+      .cadence-arc { stroke: #faf9f5; }
+    }
+  </style>
+  <path class="cadence-arc" d="M 18 6.5 A 8.5 8.5 0 1 0 18 17.5" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="12" cy="12" r="3" fill="#cc785c"/>
+</svg>

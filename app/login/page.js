@@ -320,6 +320,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
+            className={loading ? "btn-evaluating" : ""}
             style={{
               marginTop: "8px",
               width: "100%",
@@ -339,7 +340,15 @@ export default function LoginPage() {
               gap: "8px",
             }}
           >
-            {loading ? "Authenticating..." : "Sign In to Cadence"}
+            {loading ? (
+              <>
+                <span className="btn-spinner" />
+                <span>Authenticating session</span>
+                <span className="eval-dots"><span>.</span><span>.</span><span>.</span></span>
+              </>
+            ) : (
+              "Sign In to Cadence"
+            )}
           </button>
         </form>
 
