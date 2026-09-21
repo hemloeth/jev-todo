@@ -1825,178 +1825,180 @@ export default function WorkspacePage() {
       {/* =========================================================================
           2. MAIN CONTENT AREA
           ========================================================================= */}
-      <main className="dashboard-content">
-        {/* Mobile Top App Bar (visible on screens <= 768px, fixed 56px height) */}
-        <div className="dashboard-mobile-header">
-          {/* Left: Hamburger + View Title */}
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
-            <button
-              type="button"
-              onClick={() => setShowMobileSidebar(true)}
-              className="mobile-menu-btn"
-              aria-label="Open navigation menu"
-              title="Open navigation menu"
-            >
-              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <line x1="3" y1="12" x2="21" y2="12" />
-                <line x1="3" y1="18" x2="21" y2="18" />
-              </svg>
-            </button>
-
-            <div style={{ display: "flex", alignItems: "center", gap: "6px", overflow: "hidden" }}>
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
-                <path d="M 18 6.5 A 8.5 8.5 0 1 0 18 17.5" stroke="var(--color-ink)" strokeWidth="2.25" strokeLinecap="round" />
-                <circle cx="12" cy="12" r="2.75" fill="var(--color-primary)" />
-              </svg>
-              <span
-                style={{
-                  fontFamily: "var(--font-serif)",
-                  fontSize: "17px",
-                  fontWeight: 600,
-                  color: "var(--color-ink)",
-                  letterSpacing: "-0.3px",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
-              >
-                {getViewTitle()}
-              </span>
-            </div>
-          </div>
-
-          {/* Right Actions: Search + Ingest + Clear Completed */}
-          <div style={{ display: "flex", alignItems: "center", gap: "7px", flexShrink: 0 }}>
-            {/* Search Icon Toggle */}
-            {currentView !== "basis" && (
+      <main className={`dashboard-content ${showMobileSearch ? "has-mobile-search" : ""}`}>
+        {/* Mobile Top App Bar Container (Permanently fixed to top of viewport on mobile <= 768px) */}
+        <div className="dashboard-mobile-header-wrapper">
+          <div className="dashboard-mobile-header">
+            {/* Left: Hamburger + View Title */}
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
               <button
                 type="button"
-                onClick={() => setShowMobileSearch(!showMobileSearch)}
-                className={`mobile-search-btn ${showMobileSearch || searchQuery ? "active" : ""}`}
-                aria-label="Toggle search"
-                title="Search notes"
+                onClick={() => setShowMobileSidebar(true)}
+                className="mobile-menu-btn"
+                aria-label="Open navigation menu"
+                title="Open navigation menu"
               >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="11" cy="11" r="8" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <line x1="3" y1="12" x2="21" y2="12" />
+                  <line x1="3" y1="18" x2="21" y2="18" />
                 </svg>
-                {searchQuery && (
-                  <span
-                    style={{
-                      position: "absolute",
-                      top: "4px",
-                      right: "4px",
-                      width: "6px",
-                      height: "6px",
-                      borderRadius: "50%",
-                      backgroundColor: "var(--color-primary)",
-                    }}
-                  />
-                )}
               </button>
-            )}
 
-            {/* Clear Completed Action on Mobile */}
-            {currentView === "completed" && completedTasksCount > 0 && (
-              <button
-                type="button"
-                onClick={handleClearCompleted}
-                className="btn-secondary"
-                style={{ height: "32px", fontSize: "11px", padding: "0 8px" }}
-              >
-                Clear
-              </button>
-            )}
-
-            {/* Ingest Button */}
-            <button
-              type="button"
-              onClick={() => setShowAiDrawer(!showAiDrawer)}
-              disabled={sortingAi}
-              className={`btn-secondary ${sortingAi ? "btn-evaluating" : ""}`}
-              style={{
-                height: "33px",
-                fontSize: "12px",
-                padding: "0 10px",
-                gap: "5px",
-                display: "inline-flex",
-                alignItems: "center",
-                borderRadius: "var(--radius-md)",
-              }}
-              title="Open Note Ingest"
-            >
-              {sortingAi ? (
-                <>
-                  <span className="btn-spinner btn-spinner-coral" style={{ width: "11px", height: "11px" }} />
-                  <span>...</span>
-                </>
-              ) : (
-                <span>{showAiDrawer ? "Hide" : "Ingest"}</span>
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Expandable Search Bar */}
-        {showMobileSearch && currentView !== "basis" && (
-          <div className="mobile-search-bar">
-            <div style={{ position: "relative", flex: 1 }}>
-              <input
-                type="text"
-                autoFocus
-                placeholder={currentView === "expenses" ? "Search expenses..." : "Search tasks..."}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="mobile-search-input"
-              />
-              <span
-                style={{
-                  position: "absolute",
-                  left: "10px",
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  fontSize: "12px",
-                  color: "var(--color-muted)",
-                  pointerEvents: "none",
-                }}
-              >
-                🔍
-              </span>
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery("")}
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", overflow: "hidden" }}>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+                  <path d="M 18 6.5 A 8.5 8.5 0 1 0 18 17.5" stroke="var(--color-ink)" strokeWidth="2.25" strokeLinecap="round" />
+                  <circle cx="12" cy="12" r="2.75" fill="var(--color-primary)" />
+                </svg>
+                <span
                   style={{
-                    position: "absolute",
-                    right: "10px",
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    background: "none",
-                    border: "none",
-                    fontSize: "12px",
-                    color: "var(--color-muted)",
-                    cursor: "pointer",
-                    padding: "2px 4px",
+                    fontFamily: "var(--font-serif)",
+                    fontSize: "17px",
+                    fontWeight: 600,
+                    color: "var(--color-ink)",
+                    letterSpacing: "-0.3px",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
                   }}
                 >
-                  ✕
+                  {getViewTitle()}
+                </span>
+              </div>
+            </div>
+
+            {/* Right Actions: Search + Ingest + Clear Completed */}
+            <div style={{ display: "flex", alignItems: "center", gap: "7px", flexShrink: 0 }}>
+              {/* Search Icon Toggle */}
+              {currentView !== "basis" && (
+                <button
+                  type="button"
+                  onClick={() => setShowMobileSearch(!showMobileSearch)}
+                  className={`mobile-search-btn ${showMobileSearch || searchQuery ? "active" : ""}`}
+                  aria-label="Toggle search"
+                  title="Search notes"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                  {searchQuery && (
+                    <span
+                      style={{
+                        position: "absolute",
+                        top: "4px",
+                        right: "4px",
+                        width: "6px",
+                        height: "6px",
+                        borderRadius: "50%",
+                        backgroundColor: "var(--color-primary)",
+                      }}
+                    />
+                  )}
                 </button>
               )}
+
+              {/* Clear Completed Action on Mobile */}
+              {currentView === "completed" && completedTasksCount > 0 && (
+                <button
+                  type="button"
+                  onClick={handleClearCompleted}
+                  className="btn-secondary"
+                  style={{ height: "32px", fontSize: "11px", padding: "0 8px" }}
+                >
+                  Clear
+                </button>
+              )}
+
+              {/* Ingest Button */}
+              <button
+                type="button"
+                onClick={() => setShowAiDrawer(!showAiDrawer)}
+                disabled={sortingAi}
+                className={`btn-secondary ${sortingAi ? "btn-evaluating" : ""}`}
+                style={{
+                  height: "33px",
+                  fontSize: "12px",
+                  padding: "0 10px",
+                  gap: "5px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  borderRadius: "var(--radius-md)",
+                }}
+                title="Open Note Ingest"
+              >
+                {sortingAi ? (
+                  <>
+                    <span className="btn-spinner btn-spinner-coral" style={{ width: "11px", height: "11px" }} />
+                    <span>...</span>
+                  </>
+                ) : (
+                  <span>{showAiDrawer ? "Hide" : "Ingest"}</span>
+                )}
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                setShowMobileSearch(false);
-                setSearchQuery("");
-              }}
-              className="btn-secondary"
-              style={{ height: "34px", fontSize: "12px", padding: "0 10px", whiteSpace: "nowrap" }}
-            >
-              Done
-            </button>
           </div>
-        )}
+
+          {/* Mobile Expandable Search Bar */}
+          {showMobileSearch && currentView !== "basis" && (
+            <div className="mobile-search-bar">
+              <div style={{ position: "relative", flex: 1 }}>
+                <input
+                  type="text"
+                  autoFocus
+                  placeholder={currentView === "expenses" ? "Search expenses..." : "Search tasks..."}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="mobile-search-input"
+                />
+                <span
+                  style={{
+                    position: "absolute",
+                    left: "10px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    fontSize: "12px",
+                    color: "var(--color-muted)",
+                    pointerEvents: "none",
+                  }}
+                >
+                  🔍
+                </span>
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    style={{
+                      position: "absolute",
+                      right: "10px",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      background: "none",
+                      border: "none",
+                      fontSize: "12px",
+                      color: "var(--color-muted)",
+                      cursor: "pointer",
+                      padding: "2px 4px",
+                    }}
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowMobileSearch(false);
+                  setSearchQuery("");
+                }}
+                className="btn-secondary"
+                style={{ height: "34px", fontSize: "12px", padding: "0 10px", whiteSpace: "nowrap" }}
+              >
+                Done
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Top View Bar */}
         <header
@@ -2009,10 +2011,12 @@ export default function WorkspacePage() {
             justifyContent: "space-between",
             flexWrap: "wrap",
             gap: "14px",
-            backgroundColor: "var(--color-canvas)",
+            backgroundColor: "rgba(250, 249, 245, 0.90)",
+            backdropFilter: "blur(16px)",
+            WebkitBackdropFilter: "blur(16px)",
             position: "sticky",
             top: 0,
-            zIndex: 10,
+            zIndex: 100,
           }}
         >
           {/* Left: Clean Title */}
