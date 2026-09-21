@@ -8,17 +8,24 @@ export default function Home() {
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("cadence_personal_tasks_v1");
-      if (saved) {
-        const tasks = JSON.parse(saved);
-        setTaskMetrics({
-          active: tasks.filter((t) => !t.completed).length,
-          completed: tasks.filter((t) => t.completed).length,
-        });
-      }
+      localStorage.removeItem("cadence_personal_tasks_v1");
+      localStorage.removeItem("cadence_personal_nontasks_v1");
+      localStorage.removeItem("cadence_personal_expenses_v1");
     } catch {
       // ignore
     }
+
+    fetch("/api/tasks")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && Array.isArray(data.tasks)) {
+          setTaskMetrics({
+            active: data.tasks.filter((t) => !t.completed).length,
+            completed: data.tasks.filter((t) => t.completed).length,
+          });
+        }
+      })
+      .catch(() => {});
   }, []);
 
   return (

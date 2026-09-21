@@ -483,20 +483,7 @@ export default function WorkspacePage() {
 
   // Data state
   const [tasks, setTasks] = useState([]);
-  const [nonTasks, setNonTasks] = useState([
-    {
-      id: "seed_nontask_1",
-      text: "Maybe learn guitar someday",
-      is_task_confidence: 0.38,
-      priority_score: 0.2,
-    },
-    {
-      id: "seed_nontask_2",
-      text: "Remember that photosynthesis happens in chloroplasts",
-      is_task_confidence: 0.08,
-      priority_score: 0.0,
-    },
-  ]);
+  const [nonTasks, setNonTasks] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isSyncingDb, setIsSyncingDb] = useState(false);
   const [dbStatus, setDbStatus] = useState("checking");
@@ -558,6 +545,15 @@ export default function WorkspacePage() {
           setNotesText(generateHumanNotes());
         }
       }
+    }
+
+    // Purge legacy local storage cache completely so stale data never resurrects
+    try {
+      localStorage.removeItem("cadence_personal_tasks_v1");
+      localStorage.removeItem("cadence_personal_nontasks_v1");
+      localStorage.removeItem("cadence_personal_expenses_v1");
+    } catch (e) {
+      // ignore
     }
   }, []);
 
@@ -644,49 +640,28 @@ export default function WorkspacePage() {
     return expanded;
   };
 
-  // Load tasks from MongoDB (with localStorage fallback)
+  // Load tasks from MongoDB (strict MongoDB, no local storage, no starter re-seeding)
   const loadUserTasksFromDb = async () => {
     try {
       const res = await fetch("/api/tasks");
       if (res.ok) {
         const data = await res.json();
         setDbStatus("connected");
-        if (data.tasks && data.tasks.length > 0) {
-          const expanded = expandCompoundTasks(data.tasks);
-          setTasks(expanded);
-          if (data.nonTasks) setNonTasks(data.nonTasks);
-          setIsLoaded(true);
-          return;
-        }
+        const loadedTasks = Array.isArray(data.tasks) ? data.tasks : [];
+        const expanded = expandCompoundTasks(loadedTasks);
+        setTasks(expanded);
+        setNonTasks(Array.isArray(data.nonTasks) ? data.nonTasks : []);
+        setIsLoaded(true);
+        return;
       }
     } catch (err) {
-      console.warn("MongoDB initial fetch warning, checking localStorage fallback", err);
+      console.warn("MongoDB tasks fetch warning:", err);
       setDbStatus("offline");
-    }
-
-    try {
-      const savedTasks = localStorage.getItem("cadence_personal_tasks_v1");
-      const savedNonTasks = localStorage.getItem("cadence_personal_nontasks_v1");
-      if (savedTasks) {
-        const parsed = JSON.parse(savedTasks);
-        const expanded = expandCompoundTasks(parsed);
-        setTasks(expanded);
-        syncTasksToDb(expanded, savedNonTasks ? JSON.parse(savedNonTasks) : nonTasks);
-      } else {
-        setTasks(INITIAL_STARTER_TASKS);
-        syncTasksToDb(INITIAL_STARTER_TASKS, nonTasks);
-      }
-
-      if (savedNonTasks) {
-        setNonTasks(JSON.parse(savedNonTasks));
-      }
-    } catch {
-      setTasks(INITIAL_STARTER_TASKS);
     }
     setIsLoaded(true);
   };
 
-  // Load expenses from MongoDB (with localStorage fallback)
+  // Load expenses from MongoDB (strict MongoDB)
   // Re-evaluates loaded expenses using the latest parseExpense parser
   const recalculateExpensesFromRawNotes = (items) => {
     if (!Array.isArray(items)) return [];
@@ -717,35 +692,19 @@ export default function WorkspacePage() {
     });
   };
 
-  // Load expenses from MongoDB (with localStorage fallback)
+  // Load expenses from MongoDB (strict MongoDB, no local storage, no starter re-seeding)
   const loadUserExpensesFromDb = async () => {
     try {
       const res = await fetch("/api/expenses");
       if (res.ok) {
         const data = await res.json();
-        if (data.expenses && Array.isArray(data.expenses) && data.expenses.length > 0) {
-          const refreshed = recalculateExpensesFromRawNotes(data.expenses);
-          setExpenses(refreshed);
-          return;
-        }
+        const loadedExpenses = Array.isArray(data.expenses) ? data.expenses : [];
+        const refreshed = recalculateExpensesFromRawNotes(loadedExpenses);
+        setExpenses(refreshed);
+        return;
       }
     } catch (err) {
-      console.warn("MongoDB expenses initial fetch warning, checking localStorage fallback", err);
-    }
-
-    try {
-      const savedExpenses = localStorage.getItem("cadence_personal_expenses_v1");
-      if (savedExpenses) {
-        const parsed = JSON.parse(savedExpenses);
-        const refreshed = recalculateExpensesFromRawNotes(parsed);
-        setExpenses(refreshed);
-        syncExpensesToDb(refreshed);
-      } else {
-        setExpenses(INITIAL_STARTER_EXPENSES);
-        syncExpensesToDb(INITIAL_STARTER_EXPENSES);
-      }
-    } catch {
-      setExpenses(INITIAL_STARTER_EXPENSES);
+      console.warn("MongoDB expenses fetch warning:", err);
     }
   };
 
@@ -758,8 +717,8 @@ export default function WorkspacePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "sync",
-          tasks: currentTasks,
-          nonTasks: currentNonTasks,
+          tasks: currentTasks || [],
+          nonTasks: currentNonTasks || [],
         }),
       });
       if (res.ok) {
@@ -774,21 +733,15 @@ export default function WorkspacePage() {
     }
   };
 
-  // Sync expenses to MongoDB
+  // Sync expenses to MongoDB (strict MongoDB, zero local storage)
   const syncExpensesToDb = async (currentExpenses) => {
-    try {
-      localStorage.setItem("cadence_personal_expenses_v1", JSON.stringify(currentExpenses));
-    } catch (e) {
-      console.warn("Local storage expense write warning", e);
-    }
-
     try {
       await fetch("/api/expenses", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "sync",
-          expenses: currentExpenses,
+          expenses: currentExpenses || [],
         }),
       });
     } catch (err) {
@@ -796,22 +749,14 @@ export default function WorkspacePage() {
     }
   };
 
-  // Persist locally & to DB on changes
+  // Persist to MongoDB on changes (strict MongoDB only, zero local storage)
   useEffect(() => {
     if (!isLoaded || isAuthChecking) return;
-
-    try {
-      localStorage.setItem("cadence_personal_tasks_v1", JSON.stringify(tasks));
-      localStorage.setItem("cadence_personal_nontasks_v1", JSON.stringify(nonTasks));
-      localStorage.setItem("cadence_personal_expenses_v1", JSON.stringify(expenses));
-    } catch (e) {
-      console.warn("Local storage write warning", e);
-    }
 
     const timeout = setTimeout(() => {
       syncTasksToDb(tasks, nonTasks);
       syncExpensesToDb(expenses);
-    }, 800);
+    }, 600);
 
     return () => clearTimeout(timeout);
   }, [tasks, nonTasks, expenses, isLoaded, isAuthChecking]);
@@ -853,34 +798,30 @@ export default function WorkspacePage() {
     setTaskToDelete(task);
   };
 
-  // Confirm and Execute Delete Task
+  // Confirm and Execute Delete Task (Permanently removes from MongoDB)
   const confirmDeleteTask = async () => {
     if (!taskToDelete) return;
     const idToDelete = taskToDelete.id;
-
-    setTasks((prev) => {
-      const updated = prev.filter((t) => t.id !== idToDelete);
-      syncTasksToDb(updated, nonTasks);
-      return updated;
-    });
     setTaskToDelete(null);
+
+    const updated = tasks.filter((t) => t.id !== idToDelete);
+    setTasks(updated);
 
     try {
       await fetch(`/api/tasks?id=${encodeURIComponent(idToDelete)}`, {
         method: "DELETE",
       });
+      await syncTasksToDb(updated, nonTasks);
     } catch (err) {
-      console.warn("MongoDB delete sync warning:", err);
+      console.warn("MongoDB delete task sync warning:", err);
     }
   };
 
   // Clear Completed Tasks
-  const handleClearCompleted = () => {
-    setTasks((prev) => {
-      const updated = prev.filter((t) => !t.completed);
-      syncTasksToDb(updated, nonTasks);
-      return updated;
-    });
+  const handleClearCompleted = async () => {
+    const updated = tasks.filter((t) => !t.completed);
+    setTasks(updated);
+    await syncTasksToDb(updated, nonTasks);
   };
 
   // Update Field Inline
@@ -1044,20 +985,23 @@ export default function WorkspacePage() {
     });
   };
 
-  // Confirm and Execute Delete Expense
-  const confirmDeleteExpense = () => {
+  // Confirm and Execute Delete Expense (Permanently removes from MongoDB)
+  const confirmDeleteExpense = async () => {
     if (!expenseToDelete) return;
     const idToDelete = expenseToDelete.id;
-    setExpenses((prev) => {
-      const updated = prev.filter((exp) => exp.id !== idToDelete);
-      syncExpensesToDb(updated);
-      return updated;
-    });
     setExpenseToDelete(null);
 
-    fetch(`/api/expenses?id=${encodeURIComponent(idToDelete)}`, {
-      method: "DELETE",
-    }).catch((err) => console.warn("Delete expense sync warning:", err));
+    const updated = expenses.filter((exp) => exp.id !== idToDelete);
+    setExpenses(updated);
+
+    try {
+      await fetch(`/api/expenses?id=${encodeURIComponent(idToDelete)}`, {
+        method: "DELETE",
+      });
+      await syncExpensesToDb(updated);
+    } catch (err) {
+      console.warn("Delete expense sync warning:", err);
+    }
   };
 
   // Voice Input via Browser Web Speech API (Client-side, free, zero backend, supports en-IN & hi-IN)
@@ -1182,12 +1126,17 @@ export default function WorkspacePage() {
     document.body.removeChild(link);
   };
 
-  // Clear All Expenses
-  const handleClearExpenses = () => {
+  // Clear All Expenses (Permanently clears from MongoDB)
+  const handleClearExpenses = async () => {
     if (expenses.length === 0) return;
     if (window.confirm("Are you sure you want to clear all expense entries?")) {
       setExpenses([]);
-      syncExpensesToDb([]);
+      try {
+        await fetch("/api/expenses?id=all", { method: "DELETE" });
+        await syncExpensesToDb([]);
+      } catch (err) {
+        console.warn("Clear expenses warning:", err);
+      }
     }
   };
 

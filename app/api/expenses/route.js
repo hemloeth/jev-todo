@@ -169,6 +169,17 @@ export async function DELETE(req) {
 
     try {
       const db = await getDb();
+
+      if (id === "all") {
+        await db.collection("user_data").updateOne(
+          { userId },
+          {
+            $set: { expenses: [], updatedAt: new Date() },
+          }
+        );
+        return NextResponse.json({ success: true, cleared: true });
+      }
+
       await db.collection("user_data").updateOne(
         { userId },
         {
